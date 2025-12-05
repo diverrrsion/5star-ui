@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vanta Menu</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: transparent;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .menu-container {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border-radius: 12px;
+            width: 500px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
+            overflow: hidden;
+            display: none;
+        }
+        
+        .menu-container.visible {
+            display: block;
+        }
+        
+        .header {
+            background: linear-gradient(90deg, #0e4da4, #1a6fd8);
+            padding: 30px 20px;
+            text-align: center;
+        }
+        
+        .title {
+            font-size: 36px;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+        
+        .username {
+            font-size: 14px;
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+        
+        .breadcrumb {
+            background: #0e4da4;
+            padding: 10px 20px;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .categories {
+            display: flex;
+            background: #1a1a2e;
+            border-bottom: 2px solid #0e4da4;
+        }
+        
+        .category {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-bottom: 3px solid transparent;
+        }
+        
+        .category:hover {
+            background: rgba(14, 77, 164, 0.2);
+        }
+        
+        .category.active {
+            background: rgba(14, 77, 164, 0.4);
+            border-bottom-color: #0e4da4;
+        }
+        
+        .content {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        .item {
+            padding: 18px 20px;
+            background: #252525;
+            border-bottom: 1px solid #1a1a1a;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s;
+            position: relative;
+        }
+        
+        .item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 4px;
+            background: #0e4da4;
+            transform: scaleY(0);
+            transition: transform 0.2s;
+        }
+        
+        .item.active {
+            background: #0e4da4;
+        }
+        
+        .item.active::before {
+            transform: scaleY(1);
+        }
+        
+        .item.divider {
+            background: #1a1a2e;
+            padding: 10px 20px;
+            font-size: 12px;
+            opacity: 0.6;
+            text-transform: uppercase;
+        }
+        
+        .item-label {
+            flex: 1;
+        }
+        
+        .item-desc {
+            font-size: 12px;
+            opacity: 0.7;
+            margin-top: 4px;
+        }
+        
+        .item-value {
+            color: #1a6fd8;
+            margin-left: 10px;
+        }
+        
+        .checkbox {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #0e4da4;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .checkbox.checked {
+            background: #0e4da4;
+        }
+        
+        .checkbox.checked::after {
+            content: '✓';
+            color: white;
+            font-size: 14px;
+        }
+        
+        .metadata {
+            background: #1a1a2e;
+            padding: 15px 20px;
+            font-size: 12px;
+        }
+        
+        .metadata-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .metadata-key {
+            opacity: 0.7;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #1a1a2e;
+            padding: 15px 20px;
+            border-radius: 8px;
+            border-left: 4px solid #0e4da4;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            min-width: 300px;
+            animation: slideIn 0.3s;
+        }
+        
+        .notification.success { border-left-color: #00ff11; }
+        .notification.error { border-left-color: #ff0000; }
+        .notification.info { border-left-color: #0084ff; }
+        
+        .notification-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .notification-desc {
+            font-size: 13px;
+            opacity: 0.8;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        .keyboard-input {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #1a1a2e;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
+            min-width: 400px;
+            display: none;
+        }
+        
+        .keyboard-input.visible {
+            display: block;
+        }
+        
+        .keyboard-title {
+            font-size: 18px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .keyboard-value {
+            background: #252525;
+            padding: 15px;
+            border-radius: 8px;
+            border: 2px solid #0e4da4;
+            text-align: center;
+            font-size: 20px;
+            letter-spacing: 2px;
+        }
+        
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #1a1a1a;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #0e4da4;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="menu-container" id="menu">
+        <div class="header">
+            <div class="title">VANTA</div>
+            <div class="username" id="username">User</div>
+        </div>
+        
+        <div class="breadcrumb" id="breadcrumb">Main Menu</div>
+        
+        <div class="categories" id="categories"></div>
+        
+        <div class="content" id="content"></div>
+        
+        <div class="metadata" id="metadata" style="display: none;"></div>
+    </div>
+    
+    <div class="keyboard-input" id="keyboard">
+        <div class="keyboard-title" id="keyboard-title">Enter Value</div>
+        <div class="keyboard-value" id="keyboard-value"></div>
+    </div>
+    
+    <div id="notifications"></div>
+    
+    <script>
+        let currentElements = [];
+        let currentIndex = 0;
+        let currentCategories = [];
+        let currentCategoryIndex = 0;
+        
+        window.addEventListener('message', function(event) {
+            const data = event.data;
+            
+            if (data.action === 'showUI') {
+                const menu = document.getElementById('menu');
+                menu.classList.toggle('visible', data.visible);
+                
+                if (data.visible) {
+                    if (data.username) {
+                        document.getElementById('username').textContent = data.username;
+                    }
+                    if (data.elements) {
+                        currentElements = data.elements;
+                        currentIndex = data.index || 0;
+                        renderElements();
+                    }
+                    if (data.categories) {
+                        currentCategories = data.categories;
+                        currentCategoryIndex = data.categoryIndex || 0;
+                        renderCategories();
+                    }
+                    if (data.path) {
+                        document.getElementById('breadcrumb').textContent = data.path.join(' > ') || 'Main Menu';
+                    }
+                }
+            }
+            
+            if (data.action === 'updateElements') {
+                currentElements = data.elements || [];
+                currentIndex = data.index || 0;
+                renderElements();
+                
+                if (data.categories) {
+                    currentCategories = data.categories;
+                    currentCategoryIndex = data.categoryIndex || 0;
+                    renderCategories();
+                }
+                
+                if (data.path) {
+                    document.getElementById('breadcrumb').textContent = data.path.join(' > ') || 'Main Menu';
+                }
+            }
+            
+            if (data.action === 'keydown') {
+                currentIndex = data.index || 0;
+                updateActiveItem();
+            }
+            
+            if (data.action === 'showNotification') {
+                showNotification(data.type, data.title, data.desc, data.duration);
+            }
+            
+            if (data.action === 'updateKeyboard') {
+                const keyboard = document.getElementById('keyboard');
+                keyboard.classList.toggle('visible', data.visible);
+                
+                if (data.visible) {
+                    document.getElementById('keyboard-title').textContent = data.title || 'Enter Value';
+                    document.getElementById('keyboard-value').textContent = data.value || '';
+                }
+            }
+        });
+        
+        function renderCategories() {
+            const categoriesDiv = document.getElementById('categories');
+            if (!currentCategories || currentCategories.length === 0) {
+                categoriesDiv.style.display = 'none';
+                return;
+            }
+            
+            categoriesDiv.style.display = 'flex';
+            categoriesDiv.innerHTML = '';
+            
+            currentCategories.forEach((cat, index) => {
+                const catDiv = document.createElement('div');
+                catDiv.className = 'category' + (index === currentCategoryIndex ? ' active' : '');
+                catDiv.textContent = cat.label || 'Category';
+                categoriesDiv.appendChild(catDiv);
+            });
+        }
+        
+        function renderElements() {
+            const content = document.getElementById('content');
+            const metadata = document.getElementById('metadata');
+            content.innerHTML = '';
+            metadata.style.display = 'none';
+            
+            if (!currentElements || currentElements.length === 0) {
+                content.innerHTML = '<div class="item">No items</div>';
+                return;
+            }
+            
+            currentElements.forEach((element, index) => {
+                const item = document.createElement('div');
+                
+                if (element.type === 'divider') {
+                    item.className = 'item divider';
+                    item.textContent = element.label || '';
+                } else {
+                    item.className = 'item' + (index === currentIndex ? ' active' : '');
+                    
+                    const labelDiv = document.createElement('div');
+                    labelDiv.className = 'item-label';
+                    labelDiv.textContent = element.label || 'Unknown';
+                    
+                    if (element.desc) {
+                        const descDiv = document.createElement('div');
+                        descDiv.className = 'item-desc';
+                        descDiv.textContent = element.desc;
+                        labelDiv.appendChild(descDiv);
+                    }
+                    
+                    item.appendChild(labelDiv);
+                    
+                    if (element.type === 'checkbox' || element.type === 'scrollable-checkbox' || element.type === 'slider-checkbox') {
+                        const checkbox = document.createElement('div');
+                        checkbox.className = 'checkbox' + (element.checked ? ' checked' : '');
+                        item.appendChild(checkbox);
+                    }
+                    
+                    if (element.type === 'scrollable' || element.type === 'scrollable-checkbox') {
+                        const value = document.createElement('div');
+                        value.className = 'item-value';
+                        const currentValue = element.values && element.values[element.value - 1];
+                        value.textContent = '< ' + (currentValue || 'N/A') + ' >';
+                        item.appendChild(value);
+                    }
+                    
+                    if (element.type === 'slider' || element.type === 'slider-checkbox') {
+                        const value = document.createElement('div');
+                        value.className = 'item-value';
+                        value.textContent = '< ' + (element.value || 0) + ' >';
+                        item.appendChild(value);
+                    }
+                    
+                    if (element.type === 'subMenu') {
+                        const arrow = document.createElement('div');
+                        arrow.textContent = '›';
+                        arrow.style.fontSize = '20px';
+                        arrow.style.opacity = '0.6';
+                        item.appendChild(arrow);
+                    }
+                }
+                
+                content.appendChild(item);
+                
+                if (index === currentIndex && element.metaData && element.metaData.length > 0) {
+                    metadata.style.display = 'block';
+                    metadata.innerHTML = '';
+                    
+                    element.metaData.forEach(meta => {
+                        const metaItem = document.createElement('div');
+                        metaItem.className = 'metadata-item';
+                        
+                        const key = document.createElement('div');
+                        key.className = 'metadata-key';
+                        key.textContent = meta.key;
+                        
+                        const value = document.createElement('div');
+                        value.textContent = meta.value;
+                        if (meta.color) {
+                            value.style.color = `rgb(${meta.color})`;
+                        }
+                        
+                        metaItem.appendChild(key);
+                        metaItem.appendChild(value);
+                        metadata.appendChild(metaItem);
+                    });
+                }
+            });
+        }
+        
+        function updateActiveItem() {
+            renderElements();
+        }
+        
+        function showNotification(type, title, desc, duration) {
+            const notificationsDiv = document.getElementById('notifications');
+            
+            const notification = document.createElement('div');
+            notification.className = 'notification ' + type;
+            
+            const titleDiv = document.createElement('div');
+            titleDiv.className = 'notification-title';
+            titleDiv.textContent = title;
+            
+            const descDiv = document.createElement('div');
+            descDiv.className = 'notification-desc';
+            descDiv.textContent = desc;
+            
+            notification.appendChild(titleDiv);
+            notification.appendChild(descDiv);
+            notificationsDiv.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideIn 0.3s reverse';
+                setTimeout(() => notification.remove(), 300);
+            }, duration || 3000);
+        }
+    </script>
+</body>
+</html>
